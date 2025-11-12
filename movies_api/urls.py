@@ -16,8 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('movies.urls')),
+    path('silk/', include('silk.urls', namespace='silk')),  # Django Silk
 ]
+
+# Django Debug Toolbar URLs (only in DEBUG mode)
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns

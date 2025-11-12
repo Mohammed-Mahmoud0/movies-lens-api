@@ -1,21 +1,31 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 from . import views
 
-router = DefaultRouter()
-
 urlpatterns = [
-    path('', include(router.urls)),
-    
-    # Lab Question 1: N+1 Query Problem
-    path('movies/n-plus-one/', views.movies_n_plus_one, name='movies-n-plus-one'),
-    
-    # Lab Question 2: Using select_related
-    path('movies/select-related/', views.movies_select_related, name='movies-select-related'),
-    
-    # Lab Question 3: Using prefetch_related
-    path('movies/prefetch-related/', views.movies_prefetch_related, name='movies-prefetch-related'),
-    
-    # Bonus: Combined optimization
-    path('movies/combined/', views.movies_combined_optimization, name='movies-combined'),
+    # API Root - shows all available endpoints
+    path("", views.api_root, name="api-root"),
+    # Optimization Endpoints
+    path("movies/n-plus-one/", views.movies_n_plus_one, name="movies-n-plus-one"),
+    path(
+        "movies/select-related/",
+        views.movies_select_related,
+        name="movies-select-related",
+    ),
+    path(
+        "movies/prefetch-related/",
+        views.movies_prefetch_related,
+        name="movies-prefetch-related",
+    ),
+    # Advanced ORM Features
+    path("movies/q-filters/", views.movies_with_q_filters, name="movies-q-filters"),
+    path("movies/f-update/", views.update_with_f_expression, name="movies-f-update"),
+    path("movies/only/", views.movies_with_only, name="movies-only"),
+    path("movies/defer/", views.movies_with_defer, name="movies-defer"),
+    path("movies/values/", views.movies_as_dict, name="movies-values"),
+    path("movies/values-list/", views.movies_as_tuples, name="movies-values-list"),
+    path(
+        "movies/index-compare/",
+        views.compare_indexed_vs_non_indexed,
+        name="movies-index-compare",
+    ),
 ]

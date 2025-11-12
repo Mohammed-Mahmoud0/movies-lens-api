@@ -39,16 +39,20 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'movies',
+    'debug_toolbar',  # Django Debug Toolbar
+    'silk',  # Django Silk
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'silk.middleware.SilkyMiddleware',  # Django Silk - should be early
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',  # Django Debug Toolbar - should be last
 ]
 
 ROOT_URLCONF = 'movies_api.urls'
@@ -74,10 +78,27 @@ WSGI_APPLICATION = 'movies_api.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Default configuration (creates new connection for each request)
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+# Optimized configuration with connection pooling
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'CONN_MAX_AGE': 600,  # Keep connections alive for 10 minutes (600 seconds)
+        # CONN_MAX_AGE = 0 means close connection after each request (default)
+        # CONN_MAX_AGE = None means persistent connections (never close)
+        # CONN_MAX_AGE = 600 means reuse connection for 10 minutes
+        
+        # Benefits:
+        # - Reduces connection overhead (no reconnect for each request)
+        # - Improves performance for high-traffic applications
     }
 }
 
@@ -122,3 +143,19 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Django Debug Toolbar Configuration
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
+
+# Django Silk Configuration
+SILKY_PYTHON_PROFILER = True  # Enable cProfile integration
+SILKY_PYTHON_PROFILER_BINARY = True  # Use binary profiling for better performance
+SILKY_PYTHON_PROFILER_RESULT_PATH = BASE_DIR / 'silk_profiles'  # Store profiles here
+SILKY_MAX_REQUEST_BODY_SIZE = 1024  # Max request body size in KB
+SILKY_MAX_RESPONSE_BODY_SIZE = 1024  # Max response body size in KB
+
+# Ensure silk_profiles directory exists
+import os
+os.makedirs(SILKY_PYTHON_PROFILER_RESULT_PATH, exist_ok=True)

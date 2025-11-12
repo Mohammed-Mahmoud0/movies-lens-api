@@ -22,6 +22,10 @@ class Movie(models.Model):
     
     class Meta:
         db_table = 'movies'
+        # Add index on title for faster searches
+        indexes = [
+            models.Index(fields=['title'], name='movie_title_idx'),
+        ]
 
 
 class Rating(models.Model):
@@ -36,8 +40,9 @@ class Rating(models.Model):
     class Meta:
         db_table = 'ratings'
         indexes = [
-            models.Index(fields=['user_id']),
-            models.Index(fields=['rating']),
+            models.Index(fields=['user_id'], name='rating_user_idx'),  # Indexed - for performance comparison
+            models.Index(fields=['rating'], name='rating_value_idx'),
+            # Note: timestamp is NOT indexed - we'll compare performance with indexed fields
         ]
 
 
@@ -68,3 +73,7 @@ class Link(models.Model):
     
     class Meta:
         db_table = 'links'
+        # Add index on imdb_id for faster lookups
+        indexes = [
+            models.Index(fields=['imdb_id'], name='link_imdb_idx'),
+        ]
