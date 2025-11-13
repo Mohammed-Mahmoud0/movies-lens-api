@@ -18,10 +18,14 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 # Looks for tasks.py in each app directory
 app.autodiscover_tasks()
 
+# Schedule Task 1: Run every 3 minutes (configured in code)
+app.conf.beat_schedule = {
+    'task-every-3-minutes': {
+        'task': 'movies.tasks.scheduled_task_every_3_min',
+        'schedule': 180.0,  # 3 minutes = 180 seconds
+    },
+}
 
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
-    """
-    Debug task to test Celery is working
-    """
     print(f'Request: {self.request!r}')

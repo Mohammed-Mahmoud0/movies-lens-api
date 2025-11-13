@@ -1,0 +1,69 @@
+# Celery Beat - Scheduled Tasks Setup documentation(how to Setup)
+
+## Start Services (4 terminals):
+
+**Terminal 1 - Redis:**
+```
+redis-server
+```
+
+**Terminal 2 - Celery Worker:**
+```
+celery -A movies_api worker --loglevel=info --pool=solo
+```
+
+**Terminal 3 - Celery Beat:**
+```
+.\start_celery_beat.bat
+OR
+celery -A movies_api beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+```
+
+**Terminal 4 - Flower:**
+```
+celery -A movies_api flower
+```
+
+---
+
+## Tasks Configured:
+
+### 1. Task Every 3 Minutes (Code)
+- Task: `scheduled_task_every_3_min`
+- Configured in: `celery.py`
+- Runs automatically every 3 minutes
+
+### 2. Task via Admin (Interval)
+- Task: `scheduled_task_interval`
+- Configure in: Django Admin
+- Go to: http://127.0.0.1:8000/admin/django_celery_beat/periodictask/
+- Click "Add Periodic Task"
+- Name: "Task 2 - Interval"
+- Task: `movies.tasks.scheduled_task_interval`
+- Interval: Create interval (e.g., every 5 minutes)
+
+### 3. Task via Admin (Specific Time)
+- Task: `scheduled_task_specific_time`
+- Configure in: Django Admin
+- Go to: http://127.0.0.1:8000/admin/django_celery_beat/periodictask/
+- Click "Add Periodic Task"
+- Name: "Task 3 - Cron"
+- Task: `movies.tasks.scheduled_task_specific_time`
+- Crontab: Create crontab (e.g., at 14:30 daily)
+
+---
+
+## Monitor:
+
+1. **Celery Beat Terminal** - Shows when tasks are scheduled
+2. **Celery Worker Terminal** - Shows when tasks execute
+3. **Flower** (http://localhost:5555) - Shows all task history
+
+---
+
+## Quick Test:
+
+1. Start all 4 services
+2. Wait 3 minutes - Task 1 will run automatically
+3. Configure Tasks 2 & 3 in Django Admin
+4. Watch them execute in Flower

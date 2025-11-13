@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'movies',
     'debug_toolbar',  
-    'silk',  
+    'silk',
+    'django_celery_beat',  # Celery Beat for scheduled tasks
 ]
 
 MIDDLEWARE = [
