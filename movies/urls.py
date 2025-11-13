@@ -28,4 +28,8 @@ urlpatterns = [
         views.compare_indexed_vs_non_indexed,
         name="movies-index-compare",
     ),
+    # Cache Examples
+    path("cache/manual/", views.cache_manual_example, name="cache-manual"),
+    path("cache/per-view/", views.cache_per_view_example, name="cache-per-view"),
+    path("cache/partial/", views.cache_partial_example, name="cache-partial"),
 ]

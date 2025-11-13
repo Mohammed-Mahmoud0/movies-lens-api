@@ -66,6 +66,11 @@ def api_root(request, format=None):
                 "values-list-as-tuple": reverse("movies-values-list", request=request, format=format),
                 "index-comparison": reverse("movies-index-compare", request=request, format=format),
             },
+            "caching_endpoints": {
+                "manual-cache": reverse("cache-manual", request=request, format=format),
+                "per-view-cache": reverse("cache-per-view", request=request, format=format),
+                "partial-cache": reverse("cache-partial", request=request, format=format),
+            },
             "profiling_tools": {
                 "debug-toolbar": "Available on the right side of the page (for HTML views)",
                 "silk-dashboard": "/silk/",
@@ -432,4 +437,107 @@ def compare_indexed_vs_non_indexed(request):
         },
         "queries_count": queries_total,
         "queries": connection.queries if settings.DEBUG else "Enable DEBUG"
+    })
+
+
+# ============================================
+# CACHING EXAMPLES
+# ============================================
+
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
+from datetime import datetime
+
+
+# 1. LOW-LEVEL CACHE API (Manual Cache)
+@api_view(['GET'])
+def cache_manual_example(request):
+    """
+    Low-Level Manual Caching - Full control over what and when to cache
+    """
+    cache_key = 'manual_movies_list'
+    
+    # Try to get from cache first
+    cached_data = cache.get(cache_key)
+    
+    if cached_data:
+        return Response({
+            'method': 'Low-Level Manual Cache',
+            'cache_status': 'HIT - Data from cache',
+            'cached_at': cached_data['timestamp'],
+            'data': cached_data['movies']
+        })
+    
+    # Cache miss - fetch from database
+    movies = Movie.objects.all()[:5]
+    movies_data = [{'id': m.movie_id, 'title': m.title} for m in movies]
+    
+    # Store in cache for 5 minutes (300 seconds)
+    cache_data = {
+        'timestamp': datetime.now().isoformat(),
+        'movies': movies_data
+    }
+    cache.set(cache_key, cache_data, timeout=300)
+    
+    return Response({
+        'method': 'Low-Level Manual Cache',
+        'cache_status': 'MISS - Data from database',
+        'cached_at': cache_data['timestamp'],
+        'data': movies_data,
+        'note': 'Next request will be cached for 5 minutes'
+    })
+
+
+# 2. PER-VIEW CACHE (Using decorator)
+@api_view(['GET'])
+@cache_page(60 * 2)  # Cache for 2 minutes
+def cache_per_view_example(request):
+    """
+    Per-View Caching - Entire view response is cached automatically
+    """
+    # This entire response will be cached
+    movies = Movie.objects.all()[:5]
+    movies_data = [{'id': m.movie_id, 'title': m.title} for m in movies]
+    
+    return Response({
+        'method': 'Per-View Cache (Decorator)',
+        'cache_duration': '2 minutes',
+        'timestamp': datetime.now().isoformat(),
+        'data': movies_data,
+        'note': 'This entire response is cached automatically'
+    })
+
+
+# 3. TEMPLATE FRAGMENT CACHE (for partial caching)
+@api_view(['GET'])
+def cache_partial_example(request):
+    """
+    Partial/Fragment Caching - Cache only parts of the response
+    """
+    # Cache only the expensive query
+    cache_key = 'expensive_query_result'
+    expensive_data = cache.get(cache_key)
+    
+    if not expensive_data:
+        # Simulate expensive operation
+        expensive_data = Movie.objects.select_related('links').prefetch_related('genres')[:10]
+        expensive_data = [{
+            'id': m.movie_id,
+            'title': m.title,
+            'genres': [g.name for g in m.genres.all()]
+        } for m in expensive_data]
+        cache.set(cache_key, expensive_data, timeout=180)  # 3 minutes
+        cache_status = 'MISS'
+    else:
+        cache_status = 'HIT'
+    
+    # This part is always fresh (not cached)
+    current_time = datetime.now().isoformat()
+    
+    return Response({
+        'method': 'Partial/Fragment Cache',
+        'cache_status': cache_status,
+        'expensive_data': expensive_data,  # Cached
+        'current_timestamp': current_time,  # Always fresh
+        'note': 'Only expensive data is cached, timestamp is always fresh'
     })

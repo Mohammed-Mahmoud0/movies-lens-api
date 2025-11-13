@@ -39,20 +39,20 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'movies',
-    'debug_toolbar',  # Django Debug Toolbar
-    'silk',  # Django Silk
+    'debug_toolbar',  
+    'silk',  
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'silk.middleware.SilkyMiddleware',  # Django Silk - should be early
+    'silk.middleware.SilkyMiddleware',  
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',  # Django Debug Toolbar - should be last
+    'debug_toolbar.middleware.DebugToolbarMiddleware',  
 ]
 
 ROOT_URLCONF = 'movies_api.urls'
@@ -159,3 +159,30 @@ SILKY_MAX_RESPONSE_BODY_SIZE = 1024  # Max response body size in KB
 # Ensure silk_profiles directory exists
 import os
 os.makedirs(SILKY_PYTHON_PROFILER_RESULT_PATH, exist_ok=True)
+
+# Cache Configuration with Redis
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+    }
+}
+
+# ============================================
+# PER-SITE CACHE (Site-Wide Caching)
+# ============================================
+# To enable per-site caching, uncomment the lines below in MIDDLEWARE:
+# 1. Add 'django.middleware.cache.UpdateCacheMiddleware' at the TOP
+# 2. Add 'django.middleware.cache.FetchFromCacheMiddleware' at the BOTTOM
+# 
+# MIDDLEWARE = [
+#     'django.middleware.cache.UpdateCacheMiddleware',  # <-- Add at TOP
+#     'django.middleware.security.SecurityMiddleware',
+#     ...other middleware...
+#     'django.middleware.cache.FetchFromCacheMiddleware',  # <-- Add at BOTTOM
+# ]
+#
+# Then configure these settings:
+# CACHE_MIDDLEWARE_ALIAS = 'default'  # Which cache to use
+# CACHE_MIDDLEWARE_SECONDS = 600  # Cache timeout (10 minutes)
+# CACHE_MIDDLEWARE_KEY_PREFIX = 'mysite'  # Prefix for cache keys
