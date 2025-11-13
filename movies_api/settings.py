@@ -150,23 +150,47 @@ INTERNAL_IPS = [
 ]
 
 # Django Silk Configuration
-SILKY_PYTHON_PROFILER = True  # Enable cProfile integration
-SILKY_PYTHON_PROFILER_BINARY = True  # Use binary profiling for better performance
-SILKY_PYTHON_PROFILER_RESULT_PATH = BASE_DIR / 'silk_profiles'  # Store profiles here
-SILKY_MAX_REQUEST_BODY_SIZE = 1024  # Max request body size in KB
-SILKY_MAX_RESPONSE_BODY_SIZE = 1024  # Max response body size in KB
+SILKY_PYTHON_PROFILER = True  
+SILKY_PYTHON_PROFILER_BINARY = True 
+SILKY_PYTHON_PROFILER_RESULT_PATH = BASE_DIR / 'silk_profiles'  
+SILKY_MAX_REQUEST_BODY_SIZE = 1024 
+SILKY_MAX_RESPONSE_BODY_SIZE = 1024  
 
 # Ensure silk_profiles directory exists
 import os
 os.makedirs(SILKY_PYTHON_PROFILER_RESULT_PATH, exist_ok=True)
 
-# Cache Configuration with Redis
+# ============================================
+# Redis Cache Configuration
+# ============================================
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'LOCATION': 'redis://127.0.0.1:6379/1',  # Database 1 for cache
     }
 }
+
+# ============================================
+# Celery Configuration (Redis as Message Broker)
+# ============================================
+# Celery Broker (Redis)
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'  # Database 0 for broker
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'  # Store task results in Redis
+
+# Celery Task Settings
+CELERY_ACCEPT_CONTENT = ['json']  # Accept only JSON
+CELERY_TASK_SERIALIZER = 'json'  # Serialize tasks as JSON
+CELERY_RESULT_SERIALIZER = 'json'  # Serialize results as JSON
+CELERY_TIMEZONE = TIME_ZONE  # Use Django's timezone setting
+
+# Celery Task Results
+CELERY_RESULT_EXTENDED = True  # Store additional task metadata
+CELERY_TASK_TRACK_STARTED = True  # Track when tasks start
+CELERY_TASK_TIME_LIMIT = 30 * 60  # Task timeout: 30 minutes
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60  # Soft timeout: 25 minutes (warning)
+
+# Celery Beat (Periodic Tasks Scheduler) - Optional
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'  # If using django-celery-beat
 
 # ============================================
 # PER-SITE CACHE (Site-Wide Caching)

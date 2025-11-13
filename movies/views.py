@@ -71,6 +71,11 @@ def api_root(request, format=None):
                 "per-view-cache": reverse("cache-per-view", request=request, format=format),
                 "partial-cache": reverse("cache-partial", request=request, format=format),
             },
+            "celery_background_tasks": {
+                "heavy-task-1": reverse("celery-task1", request=request, format=format) + " (5 sec)",
+                "heavy-task-2": reverse("celery-task2", request=request, format=format) + " (8 sec)",
+                "flower-monitor": "http://localhost:5555",
+            },
             "profiling_tools": {
                 "debug-toolbar": "Available on the right side of the page (for HTML views)",
                 "silk-dashboard": "/silk/",
@@ -440,14 +445,16 @@ def compare_indexed_vs_non_indexed(request):
     })
 
 
-# ============================================
 # CACHING EXAMPLES
-# ============================================
 
 from django.core.cache import cache
 from django.views.decorators.cache import cache_page
 from datetime import datetime
 
+
+# the first request not hit the cache so the time is high 
+# next request in the range of the time it git the response in very low time compared too the first time 
+# that shown iin all methods of cache
 
 # 1. LOW-LEVEL CACHE API (Manual Cache)
 @api_view(['GET'])
@@ -526,18 +533,65 @@ def cache_partial_example(request):
             'title': m.title,
             'genres': [g.name for g in m.genres.all()]
         } for m in expensive_data]
-        cache.set(cache_key, expensive_data, timeout=180)  # 3 minutes
+        cache.set(cache_key, expensive_data, timeout=180) 
         cache_status = 'MISS'
     else:
         cache_status = 'HIT'
     
-    # This part is always fresh (not cached)
     current_time = datetime.now().isoformat()
     
     return Response({
         'method': 'Partial/Fragment Cache',
         'cache_status': cache_status,
-        'expensive_data': expensive_data,  # Cached
-        'current_timestamp': current_time,  # Always fresh
+        'expensive_data': expensive_data, 
+        'current_timestamp': current_time,  
         'note': 'Only expensive data is cached, timestamp is always fresh'
+    })
+
+
+# Celery Background Tasks - Simple GET endpoints
+
+@api_view(['GET'])
+def test_heavy_task_1(request):
+    """
+    Heavy Task 1: Calculate movie statistics (takes 5 seconds)
+    """
+    from .tasks import calculate_movie_stats
+    
+    movie_id = 1  
+    
+    # Run task in background
+    task = calculate_movie_stats.delay(movie_id)
+    
+    return Response({
+        'task': 'Movie Statistics Calculation',
+        'duration': '5 seconds',
+        'task_id': task.id,
+        'movie_id': movie_id,
+        'status': 'Task started in background',
+        'monitor': 'Check Flower at http://localhost:5555',
+        'note': 'Task is running in background. Response returned immediately!'
+    })
+
+
+@api_view(['GET'])
+def test_heavy_task_2(request):
+    """
+    Heavy Task 2: Bulk ratings processing (takes 8 seconds)
+    """
+    from .tasks import process_bulk_ratings
+    
+    user_id = 1  
+    
+    # Run task in background
+    task = process_bulk_ratings.delay(user_id)
+    
+    return Response({
+        'task': 'Bulk Ratings Processing',
+        'duration': '8 seconds',
+        'task_id': task.id,
+        'user_id': user_id,
+        'status': 'Task started in background',
+        'monitor': 'Check Flower at http://localhost:5555',
+        'note': 'Task is running in background. Response returned immediately!'
     })

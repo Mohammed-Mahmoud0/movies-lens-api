@@ -32,4 +32,8 @@ urlpatterns = [
     path("cache/manual/", views.cache_manual_example, name="cache-manual"),
     path("cache/per-view/", views.cache_per_view_example, name="cache-per-view"),
     path("cache/partial/", views.cache_partial_example, name="cache-partial"),
+    
+    # Celery Background Tasks - Simple GET requests
+    path("celery/task1/", views.test_heavy_task_1, name="celery-task1"),
+    path("celery/task2/", views.test_heavy_task_2, name="celery-task2"),
 ]
