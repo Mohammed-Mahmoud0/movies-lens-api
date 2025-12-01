@@ -1,50 +1,27 @@
-# Movies Lens API - Django Advanced Project# Movies API - Database Schema
+# Movies Lens API - Django Advanced Project
 
+Django REST API demonstrating ORM optimization, caching, profiling, and asynchronous tasks.
 
-
-Django REST API demonstrating ORM optimization, caching, profiling, and asynchronous tasks.## Schema
-
-
-
----```
-
-Genre(id PK, name UNIQUE)
+---
 
 ## What We Built
 
-Movie(movie_id PK, title)
-
 ### 1. Query Optimization
-
-- **N+1 Problem Demo** - Shows the issue (11 queries)Movie_Genres(id PK, movie_id FK->Movie.movie_id, genre_id FK->Genre.id)
-
+- **N+1 Problem Demo** - Shows the issue (11 queries)
 - **select_related()** - Fixed with JOIN (1 query)
-
-- **prefetch_related()** - Optimized ManyToMany (3 queries)Rating(id PK, user_id, movie_id FK->Movie.movie_id, rating, timestamp)
-
+- **prefetch_related()** - Optimized ManyToMany (3 queries)
 - **Result**: 91% query reduction
 
-Tag(id PK, user_id, movie_id FK->Movie.movie_id, tag, timestamp)
-
 ### 2. Advanced ORM Features
-
-- **Q()** - Complex filters (AND/OR/NOT)Link(movie_id PK FK->Movie.movie_id, imdb_id, tmdb_id)
-
-- **F()** - SQL-level updates without Python```
-
+- **Q()** - Complex filters (AND/OR/NOT)
+- **F()** - SQL-level updates without Python
 - **only()/defer()** - Select specific fields
-
-- **values()/values_list()** - Return dict/tuple## Relationships
-
+- **values()/values_list()** - Return dict/tuple
 - **Database Indexes** - Performance boost
+- **CONN_MAX_AGE** - Connection pooling (600 sec)
 
-- **CONN_MAX_AGE** - Connection pooling (600 sec)- Movie ↔ Genre: Many-to-Many (via Movie_Genres)
-
-- Movie → Rating: One-to-Many
-
-### 3. Caching with Redis- Movie → Tag: One-to-Many
-
-- Manual caching with cache.get/set- Movie ↔ Link: One-to-One
+### 3. Caching with Redis
+- Manual caching with cache.get/set
 - Per-view caching (entire response)
 - Partial/fragment caching (specific data)
 
@@ -153,19 +130,27 @@ celery -A movies_api flower
 
 ## Database Schema
 
+### Schema Definition
+
 ```
-Genre(id, name)
-Movie(movie_id, title)
-Rating(id, user_id, movie_id, rating, timestamp)
-Tag(id, user_id, movie_id, tag, timestamp)
-Link(movie_id, imdb_id, tmdb_id)
+Genre(id PK, name UNIQUE)
+
+Movie(movie_id PK, title)
+
+Movie_Genres(id PK, movie_id FK->Movie.movie_id, genre_id FK->Genre.id)
+
+Rating(id PK, user_id, movie_id FK->Movie.movie_id, rating, timestamp)
+
+Tag(id PK, user_id, movie_id FK->Movie.movie_id, tag, timestamp)
+
+Link(movie_id PK FK->Movie.movie_id, imdb_id, tmdb_id)
 ```
 
-**Relationships:**
-- Movie ↔ Genre: ManyToMany
-- Movie → Rating: OneToMany
-- Movie → Tag: OneToMany
-- Movie ↔ Link: OneToOne
+### Relationships
+- Movie ↔ Genre: Many-to-Many (via Movie_Genres)
+- Movie → Rating: One-to-Many
+- Movie → Tag: One-to-Many
+- Movie ↔ Link: One-to-One
 
 ---
 
